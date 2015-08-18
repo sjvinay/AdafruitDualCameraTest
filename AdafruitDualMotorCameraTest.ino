@@ -51,7 +51,7 @@ int cameraStepperSpeed = 100.0;
 
 int cameraStepperDistance = TOTAL_DISTANCE/2;
 int axisStepperBlockDistance = TOTAL_DISTANCE/40;
-int axisStepperCurrentDistance = 0;
+int axisStepperCurrentDistance = axisStepperBlockDistance;
 
 boolean cameraMotorWasActive = false;
 boolean axisMotorWasActive = false;
@@ -99,6 +99,7 @@ void loop() {
 
 void runMotor(){
    if(!axisStepperFinished()){
+    // Serial.println(String(axisMotorWasActive) + " " + String(cameraMotorWasActive) + " " + String(axisStepper.isFinished()));
        if(axisMotorWasActive && axisStepper.isFinished()){
           resetAxisMotor();
           axisMotorWasActive = false; 
@@ -117,7 +118,7 @@ void runMotor(){
          axisMotorRun();
        }
     }
-}
+ }
 
 void setUpCameraMotor(){
    cameraStepper.setSpeed(cameraStepperSpeed);
@@ -133,18 +134,29 @@ void cameraMotorRun(){
 }
 
 void axisMotorRun(){
-  axisStepper.step(axisStepperBlockDistance);
+  axisStepper.step(axisStepperCurrentDistance);
   
+}
+
+void toggleCameraStepperDistance(){
+  if(cameraStepperDistance > 0){
+    cameraStepperDistance = 0;
+  }else{
+    cameraStepperDistance = TOTAL_DISTANCE/2;
+  }
 }
 
 void resetCameraMotor(){
    cameraStepper.setIsFinished(false);
+   toggleCameraStepperDistance();
    cameraStepperSpeed = -cameraStepperSpeed;
-    cameraStepper.setSpeed(cameraStepperSpeed);
+   cameraStepper.setSpeed(cameraStepperSpeed);
 }
 
 void resetAxisMotor(){
    axisStepperCurrentDistance += axisStepperBlockDistance;
+   
+     
    axisStepper.setIsFinished(false);
 }
 
@@ -179,34 +191,32 @@ void runCamera(){
   Serial.println(String(phi) + " " + String(theta) + " " + String(distance));
 }
 
-
-
-int checkForStart(){
+ int checkForStart(){
   
-   if(Serial.available() <5){
-       if(startProgram)
-         return startMotor;
-       else
-         return stopMotor;
-   }
+     if(Serial.available() <5){
+         if(startProgram)
+           return startMotor;
+         else
+           return stopMotor;
+     }
    
-  char receivedString[6];
+    char receivedString[6];
   
-  for(int i = 0; i <5;i++){
-    char inByte = Serial.read();
-    receivedString[i] = inByte;
-  }
+    for(int i = 0; i <5;i++){
+      char inByte = Serial.read();
+      receivedString[i] = inByte;
+    }
   
-  receivedString[5] = '\0';
-  String start = String("start");
-  String rec = String(receivedString);
+    receivedString[5] = '\0';
+    String start = String("start");
+    String rec = String(receivedString);
   
-  if(rec == start){
-    startProgram = true;
-    return true;
-  }else{
-    return false;
-  }
+    if(rec == start){
+      startProgram = true;
+      return true;
+    }else{
+      return false;
+    }
 }
 
 
